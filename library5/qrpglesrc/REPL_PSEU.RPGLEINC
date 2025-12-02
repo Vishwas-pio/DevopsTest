@@ -1,0 +1,203 @@
+**FREE
+
+/If Defined(REPL_PSEU)
+/EoF
+/EndIf
+/Define REPL_PSEU
+
+/include repl_eval
+/include repl_pseut
+
+dcl-c c_control_statements 3;
+dcl-ds t_controlStatement qualified template;
+  statement like(t_lineOfCode.code) dim(c_control_statements);  
+end-ds;
+
+dcl-s t_sourceType char(10) template;
+// Code which should sit with the `ctl-opt` section
+dcl-c c_control_statement 'control';
+// Code which should sit after the /include qrpgleref,repl_hlpr line
+dcl-c c_mainline_code 'mainline';
+
+// Clear the current session existing code from the
+//   REPLSRC table.
+dcl-pr clearSessionPseudoCode;
+  sourceType like(t_sourceType) const;
+  sessionId char(28) const options(*nopass);
+end-pr;
+// Clear the current session existing results from the
+//   REPLRSLT table.
+dcl-pr clearSessionPseudoResults;
+  sessionId char(28) const options(*nopass);
+end-pr;
+// Clear the current session existing variables from the
+//   REPLVARS table.
+dcl-pr clearSessionPseudoVariables;
+  sessionId char(28) const options(*nopass);
+end-pr;
+
+// Prepare a cursor to return all the existing code for this
+//   session from the REPLSRC table.
+// This will not include any lines after the last non-blank
+//   line.
+// The code can be returned with fetchLineOfPseudoCode.
+dcl-pr prepareFetchLinesOfPseudoCode;
+  sourceFile likeds(t_sourceLocation) const options(*nopass);
+  startingLine like(t_lineOfCode.line) const options(*nopass);
+end-pr;
+
+// Return all the existing code for this session from the
+//   REPLSRC table.
+// This must be prepared with prepareFetchLinesOfPseudoCode.
+dcl-pr fetchLineOfPseudoCode ind;
+  lineOfCode likeds(t_lineOfCode);
+  replCode ind const;
+  iSourceLocation likeds(t_sourceLocation) const options(*nopass);
+end-pr;
+
+// Add a single line of code for this session to the REPLSRC table.
+dcl-pr storeLineOfPseudoCode;
+  sourceType like(t_sourceType) const;
+  lineOfCode likeds(t_lineOfCode) const;
+end-pr;
+
+// Insert a new blank line for this session in the REPLSRC table.
+// This can be inserted between existing lines of code. Subsequent
+// lines of code will have their line number incremented.
+dcl-pr insertNewLineOfPseudoCode;
+  line like(t_lineOfCode.line) const;
+end-pr;
+
+// Split an existing line for this session in the REPLSRC table.
+// Subsequent lines of code will have their line number incremented.
+dcl-pr splitLineOfPseudoCode;
+  line like(t_lineOfCode.line) const;
+  column packed(3) const;
+end-pr;
+
+// Delete a line for this session in the REPLSRC table.
+// Subsequent lines will have their line number decremented.
+dcl-pr deleteLineOfPseudoCode;
+  line like(t_lineOfCode.line) const;
+end-pr;
+
+// Prepare a cursor to return all stored results for this session
+//   and line number in the REPLRSLT table.
+// Results can be returned using fetchResultForLineOfCode.
+dcl-pr prepareFetchResultForLineOfCode;
+  line like(t_lineOfCode.line) const;
+end-pr;
+
+// Prepare a cursor to return all stored results for this session
+// Results can be returned using fetchResultForAllLinesOfCode.
+dcl-pr prepareFetchResultForAllCode;
+  externalSessionId varchar(28) const;
+end-pr;
+
+// Return each of the results for a single line number and this
+//   session in the REPLRSLT table.
+// This must be prepared with prepareFetchResultForLineOfCode.
+dcl-pr fetchResultForLineOfCode ind;
+  result likeds(t_replResult);
+end-pr;
+
+// Return each of the results for a single line number and this
+//   session in the REPLRSLT table.
+// This must be prepared with prepareFetchResultForAllCode.
+dcl-pr fetchResultForAllLinesOfCode ind;
+  result likeds(t_replResult);
+end-pr;
+
+// Housework: Remove any snippets from the database which are
+//  completely blank.
+dcl-pr removeUnusedSnippets end-pr;
+
+// Prepare a list of stored snippets for a particular user,
+//  or blank for all users.
+// The indicators allows you to specify whether snippets
+//  stored to a particular session, or to a particular
+//  save name should be returned.
+dcl-pr prepareFetchStoredSnippets;
+  snippetsForUser char(10) const;
+  savedSnippets ind const;
+end-pr;
+
+// Fetch the next stored snippet given the parameters
+//  specified in prepareFetchStoredSnippets
+dcl-pr fetchStoredSnippets ind;
+  storedSnippet likeds(t_storedSnippet);
+end-pr;
+
+// Store the contents of the current session to a save file
+//  belonging to the current user.
+// Overwrites any existing save files with the same name
+//  belonging to the current user.
+dcl-pr storeSessionToSaveFile;
+  saveFile char(20) const;
+end-pr;
+
+// Restores a selected save file to the current session.
+dcl-pr restoreSaveFileToSession;
+  owner char(10) const;
+  saveFile char(20) const;
+end-pr;
+
+// Restores a selected save file to the current session.
+dcl-pr restoreSessionToSession;
+  sessionId char(28) const;
+end-pr;
+
+// Checks if a particular save file exists for a given owner.
+dcl-pr saveFileExistsForOwner ind;
+  owner char(10) const;
+  saveFile char(20) const;
+end-pr;
+
+// Deletes a particular save file for a given owner.
+dcl-pr deleteSaveFileForOwner;
+  owner char(10) const;
+  saveFile char(20) const;
+end-pr;
+
+// Fetch the organisation default control statement.
+// This exists in replsrc with type "control", and will have a null
+// session ID, save name, and session ID. There is no maintenance
+// function for setting this, but it can be manually added to the file.
+dcl-pr fetchOrganisationControlStatementDefault likeds(t_controlStatement);
+end-pr;
+
+// Fetch the user default control statement.
+// This exists in replsrc with type "control", and will have a null
+// session ID and save name. 
+dcl-pr fetchUserControlStatementDefault likeds(t_controlStatement);
+end-pr;
+
+// Fetch the session control statement.
+// This exists in replsrc with type "control", and will have the relevant
+// session ID.
+dcl-pr fetchSessionControlStatement likeds(t_controlStatement);
+end-pr;
+
+// Store the current control statement to be the user default.
+dcl-pr storeUserControlStatementDefault;
+  controlStatement likeds(t_controlStatement) const;
+end-pr;
+
+// Store the current control statement to this session.  
+dcl-pr storeSessionControlStatement;
+  controlStatement likeds(t_controlStatement) const;
+end-pr;
+
+// strip any comments from a line of code, and pass it back
+// if execSql is on, then we will also treat -- as a comment
+dcl-pr stripComments likeds(t_lineOfCode);
+  lineOfCode likeds(t_lineOfCode) value;
+  execSql ind const;
+end-pr;
+
+dcl-pr @scan packed(5);
+  searchArgument varchar(65535) const;
+  sourceString varchar(65535) value;
+  startPosition packed(5) const options(*omit: *nopass);
+  length packed(5) const options(*omit: *nopass);
+end-pr;
