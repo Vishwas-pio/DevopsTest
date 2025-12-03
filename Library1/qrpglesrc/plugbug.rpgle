@@ -1,6 +1,7 @@
      H NOMAIN
      H AlwNull(*UsrCtl)
      H BNDDIR('QC2LE')
+     H BNDDIR('QC2LE')
 
       *****************************************************
       * Copyright (c) 2010, IBM Corporation
@@ -72,6 +73,7 @@
      D   WaitTime                    10I 0 const
      D   MsgAction                   10A   const
      D   ErrorCode                 8000A   options(*varsize)
+
 
 
       *****************************************************
