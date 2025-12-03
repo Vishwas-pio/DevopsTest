@@ -20,6 +20,8 @@ ctl-opt debug  option(*nodebugio: *srcstmt) dftactgrp(*no)
 /include ../base36/base36_p.rpgle
 
 dcl-proc Main ;
+dcl-proc Main ;
+
 dcl-pi *N extpgm('BTBR');
     pi_First char(20);
     pi_Last  char(20);
