@@ -74,6 +74,7 @@
      D   ErrorCode                 8000A   options(*varsize)
 
 
+
       *****************************************************
       * DebugMe
       * Send message to qsysopr and wait for response
