@@ -3,3 +3,4 @@
    Exec SQL   Set Option Commit=*NONE, Naming=*SQL
                          DatFmt=*ISO,  CloSQLCsr=*ENDACTGRP;
 
+

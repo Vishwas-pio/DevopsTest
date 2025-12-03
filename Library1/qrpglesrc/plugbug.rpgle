@@ -1,6 +1,7 @@
      H NOMAIN
      H AlwNull(*UsrCtl)
      H BNDDIR('QC2LE')
+     H BNDDIR('QC2LE')
 
       *****************************************************
       * Copyright (c) 2010, IBM Corporation
